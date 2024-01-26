@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ソース ファイル">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="ヘッダー ファイル">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="リソース ファイル">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Library">
+      <UniqueIdentifier>{a12883bc-a19a-4e2e-8933-47bfb3332a8b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Utilities">
+      <UniqueIdentifier>{5de34c04-394a-44b3-9728-b1fbf97d8b56}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\StarImg">
+      <UniqueIdentifier>{08758614-6733-4728-a1b9-2167e0f15cea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\StarImg\Data">
+      <UniqueIdentifier>{a03bc2d8-102e-4f00-a621-4727ac0c989f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\StarImg\Pass">
+      <UniqueIdentifier>{84dddc87-0c85-42b0-85cf-78cada333a58}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Main.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="SideStarImg.hpp">
+      <Filter>ヘッダー ファイル\StarImg\Data</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Console.hpp">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="cxxopts.hpp">
+      <Filter>ヘッダー ファイル\Library</Filter>
+    </ClInclude>
+    <ClInclude Include="CalcScalePass.hpp">
+      <Filter>ヘッダー ファイル\StarImg\Pass</Filter>
+    </ClInclude>
+    <ClInclude Include="CompositePass.hpp">
+      <Filter>ヘッダー ファイル\StarImg\Pass</Filter>
+    </ClInclude>
+    <ClInclude Include="CutoutImgPass.hpp">
+      <Filter>ヘッダー ファイル\StarImg\Pass</Filter>
+    </ClInclude>
+    <ClInclude Include="PassBase.hpp">
+      <Filter>ヘッダー ファイル\StarImg\Pass</Filter>
+    </ClInclude>
+    <ClInclude Include="RemoveIndex0ImgPass.hpp">
+      <Filter>ヘッダー ファイル\StarImg\Pass</Filter>
+    </ClInclude>
+    <ClInclude Include="ScaledImgPass.hpp">
+      <Filter>ヘッダー ファイル\StarImg\Pass</Filter>
+    </ClInclude>
+    <ClInclude Include="StarImg.hpp">
+      <Filter>ヘッダー ファイル\StarImg\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="StarImgConverter.hpp">
+      <Filter>ヘッダー ファイル\StarImg</Filter>
+    </ClInclude>
+    <ClInclude Include="StarImgLoader.hpp">
+      <Filter>ヘッダー ファイル\StarImg</Filter>
+    </ClInclude>
+    <ClInclude Include="StarScale.hpp">
+      <Filter>ヘッダー ファイル\StarImg\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="CvUtility.hpp">
+      <Filter>ヘッダー ファイル\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="StarUtility.hpp">
+      <Filter>ヘッダー ファイル\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Event.hpp">
+      <Filter>ヘッダー ファイル\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="CalcRotationPass.hpp">
+      <Filter>ヘッダー ファイル\StarImg\Pass</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
