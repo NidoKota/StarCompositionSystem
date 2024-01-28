@@ -26,29 +26,35 @@ class Console
 {
 private:
     char* _argv0;
-    Event<void, tuple<string, bool>> _onLoad;
-    Event<void, bool> _onConvert;
-    Event<void, tuple<int, string>> _onPreview;
-    Event<void, void> _onKill;
+
+    Event<void, tuple<string, bool>> _onLoadEvent;
+    Event<void, bool> _onConvertEvent;
+    Event<void, tuple<int, string>> _onPreviewEvent;
+    Event<void, void> _onKillEvent;
+
+    optional<thread> _massageThread = nullopt;
+    optional<thread> _massageKillThread = nullopt;
+    optional<cxxopts::Options> _options = nullopt;
+
+    struct CmdAndExp
+    {
+        const string Cmd;
+        const string Exp;
+    };
+
+    const CmdAndExp LoadMultiTheread   { "lmt", "load multi thread" };
+    const CmdAndExp LoadPath           { "lpt", "load path" };
+    const CmdAndExp ConvertMultiThread { "cmt", "convert multi thread" };
+    const CmdAndExp PreviewSourceIndex { "psi", "preview source index" };
+    const CmdAndExp PreviewEndPassName { "pep", "preview end pass name" };
 
 public:
-    IReadOnlyEvent<void, tuple<string, bool>>& OnLoad = _onLoad;
-    IReadOnlyEvent<void, bool>& OnConvert = _onConvert;
-    IReadOnlyEvent<void, tuple<int, string>>& OnPreview = _onPreview;
-    IReadOnlyEvent<void, void>& OnKill = _onKill;
+    IReadOnlyEvent<void, tuple<string, bool>>& OnLoadEvent = _onLoadEvent;
+    IReadOnlyEvent<void, bool>& OnConvertEvent = _onConvertEvent;
+    IReadOnlyEvent<void, tuple<int, string>>& OnPreviewEvent = _onPreviewEvent;
+    IReadOnlyEvent<void, void>& OnKillEvent = _onKillEvent;
 
 private:
-#define LOAD_MULTI_THREAD_CMD "lmt"
-#define LOAD_MULTI_THREAD_EXP "load multi thread"
-#define LOAD_PATH_CMD "lpt"
-#define LOAD_PATH_EXP "load path"
-#define CONVERT_MULTI_THREAD_CMD "cmt"
-#define CONVERT_MULTI_THREAD_EXP "convert multi thread"
-#define PREVIEW_SOURCE_INDEX_CMD "psi"
-#define PREVIEW_SOURCE_INDEX_EXP "preview source index"
-#define PREVIEW_END_PASS_NAME_CMD "pep"
-#define PREVIEW_END_PASS_NAME_EXP "preview end pass name"
-
     cxxopts::Options GetOptions(char* argv0)
     {
         using namespace cxxopts;
@@ -61,16 +67,16 @@ private:
         options
             .allow_unrecognised_options()
             .add_options()
-            ("h,help",                     "show help")
-            ("k",                          "kill command")
-            ("l",                          "load imgs")
-            (LOAD_MULTI_THREAD_CMD,        LOAD_MULTI_THREAD_EXP,        cxxopts::value<bool>()->default_value("true"))
-            (LOAD_PATH_CMD,                LOAD_PATH_EXP,                cxxopts::value<string>()->default_value(""))
-            ("c",                          "convert imgs")
-            (CONVERT_MULTI_THREAD_CMD,     CONVERT_MULTI_THREAD_EXP,     cxxopts::value<bool>()->default_value("true"))
-            ("p",                          "preview img")
-            (PREVIEW_SOURCE_INDEX_CMD,     PREVIEW_SOURCE_INDEX_EXP,     cxxopts::value<int>()->default_value("0"))
-            (PREVIEW_END_PASS_NAME_CMD,    PREVIEW_END_PASS_NAME_EXP,    cxxopts::value<string>()->default_value(""))
+            ("h,help",              "show help")
+            ("k",                   "kill command")
+            ("l",                   "load imgs")
+            (LoadMultiTheread.Cmd,   LoadMultiTheread.Exp,   cxxopts::value<bool>()->default_value("true"))
+            (LoadPath.Cmd,           LoadPath.Exp,           cxxopts::value<string>()->default_value(""))
+            ("c",                   "convert imgs")
+            (ConvertMultiThread.Cmd, ConvertMultiThread.Exp, cxxopts::value<bool>()->default_value("true"))
+            ("p",                   "preview img")
+            (PreviewSourceIndex.Cmd, PreviewSourceIndex.Exp, cxxopts::value<int>()->default_value("0"))
+            (PreviewEndPassName.Cmd, PreviewEndPassName.Exp, cxxopts::value<string>()->default_value(""))
             ;
 
         return options;
@@ -97,56 +103,56 @@ private:
 
             if (result.count("k"))
             {
-                onError("OnMassageIsNotRunning");
+                OnError("OnMassageIsNotRunning");
                 match = true;
             }
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-            if (result.count(LOAD_MULTI_THREAD_CMD))
+            if (result.count(LoadMultiTheread.Cmd))
             {
-                OnChangeParams({ LOAD_MULTI_THREAD_EXP, result[LOAD_MULTI_THREAD_CMD].as<bool>() ? "true" : "false" });
+                OnChangeParams({ LoadMultiTheread.Exp, result[LoadMultiTheread.Cmd].as<bool>() ? "true" : "false" });
                 match = true;
             }
-            if (result.count(LOAD_PATH_CMD))
+            if (result.count(LoadPath.Cmd))
             {
-                OnChangeParams({ LOAD_PATH_EXP , result[LOAD_PATH_CMD].as<string>() });
+                OnChangeParams({ LoadPath.Exp , result[LoadPath.Cmd].as<string>() });
                 match = true;
             }
             if (result.count("l"))
             {
-                _onLoad({ result[LOAD_PATH_CMD].as<string>(), result[LOAD_MULTI_THREAD_CMD].as<bool>() });
+                _onLoadEvent({ result[LoadPath.Cmd].as<string>(), result[LoadMultiTheread.Cmd].as<bool>() });
                 match = true;
             }
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-            if (result.count(CONVERT_MULTI_THREAD_CMD))
+            if (result.count(ConvertMultiThread.Cmd))
             {
-                OnChangeParams({ CONVERT_MULTI_THREAD_EXP, result[CONVERT_MULTI_THREAD_CMD].as<bool>() ? "true" : "false" });
+                OnChangeParams({ PreviewSourceIndex.Exp, result[ConvertMultiThread.Cmd].as<bool>() ? "true" : "false" });
                 match = true;
             }
             if (result.count("c"))
             {
-                _onConvert(result[CONVERT_MULTI_THREAD_CMD].as<bool>());
+                _onConvertEvent(result[ConvertMultiThread.Cmd].as<bool>());
                 match = true;
             }
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-            if (result.count(PREVIEW_SOURCE_INDEX_CMD))
+            if (result.count(PreviewSourceIndex.Cmd))
             {
-                OnChangeParams({ PREVIEW_SOURCE_INDEX_EXP, to_string(result[PREVIEW_SOURCE_INDEX_CMD].as<int>()) });
+                OnChangeParams({ PreviewSourceIndex.Exp, to_string(result[PreviewSourceIndex.Cmd].as<int>()) });
                 match = true;
             }
-            if (result.count(PREVIEW_END_PASS_NAME_CMD))
+            if (result.count(PreviewEndPassName.Cmd))
             {
-                OnChangeParams({ PREVIEW_END_PASS_NAME_EXP, result[PREVIEW_END_PASS_NAME_CMD].as<string>() });
+                OnChangeParams({ PreviewEndPassName.Exp, result[PreviewEndPassName.Cmd].as<string>() });
                 match = true;
             }
             if (result.count("p"))
             {
-                _onPreview({ result[PREVIEW_SOURCE_INDEX_CMD].as<int>(), result[PREVIEW_END_PASS_NAME_CMD].as<string>() });
+                _onPreviewEvent({ result[PreviewSourceIndex.Cmd].as<int>(), result[PreviewEndPassName.Cmd].as<string>() });
                 match = true;
             }
 
@@ -154,14 +160,14 @@ private:
 
             if (!match)
             {
-                onError("NotMuch");
+                OnError("NotMuch");
             }
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////
         }
         catch (OptionException e) 
         {
-            onError(e.what());
+            OnError(e.what());
         }
 
         _massageThread.value().detach();
@@ -180,27 +186,21 @@ private:
 
             if (result.count("k"))
             {
-                _onKill();
+                _onKillEvent();
             }
             else
             {
-                onError("OnMassageIsRunning");
+                OnError("OnMassageIsRunning");
             }
         }
         catch (OptionException e)
         {
-            onError(e.what());
+            OnError(e.what());
         }
 
         _massageKillThread.value().detach();
         _massageKillThread = nullopt;
     }
-
-    ////////////////////////////////////////////////////////////////////////////////////
-    
-    optional<thread> _massageThread = nullopt;
-    optional<thread> _massageKillThread = nullopt;
-    optional<cxxopts::Options> _options = nullopt;
 
     cxxopts::ParseResult GetResult(string command)
     {
@@ -264,22 +264,20 @@ public:
         }
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////
-
-    function<void(string)> onError = [&](string what)
+    void OnError(string what)
     {
         ERROR_OUT(what);
-    };
+    }
 
-    function<void(tuple<int, int, float>)> onChangeProgress = [&](tuple<int, int, float> args)
+    void OnChangeProgress(tuple<int, int, float> args)
     {
         auto& [step, allStep, progress] = args;
         if (allStep > 1) OUT("Progress(" << step << "/" << allStep << ") " << fixed << setprecision(1) << progress * 100 << " % ");
         else  OUT("Progress " << fixed << setprecision(1) << progress * 100 << " % ");
-    };
+    }
     
-    function<void(string)> onComplete = [&](string taskName)
+    void OnComplete(string taskName)
     {
         OUT(taskName << " Completed");
-    };
+    }
 };

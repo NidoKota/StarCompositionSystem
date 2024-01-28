@@ -26,46 +26,41 @@ StarImgConverter starImgConverter = StarImgConverter();
 vector<StarImg> starImgs;
 Mat result;
 
-function<void(tuple<string, bool>)> onLoad = [&](tuple<string, bool> args)
-{
-    auto& [loadpath, multiThread] = args;
-    starImgLoader.Load(starImgs, loadpath, multiThread);
-};
-
-function<void(bool)> onConvert = [&](bool multiThread)
-{
-    starImgConverter.Convert(result, starImgs, multiThread);
-    saveImage(result);
-};
-
-function<void(tuple<int, string>)> onPreview = [&](tuple<int, string> args)
-{
-    auto& [sourceIndex, endPassName] = args;
-    Mat m = starImgConverter.SingleConvert(starImgs, sourceIndex, endPassName);
-    showImageWaitAndThrough(m);
-};
-
-function<void(void)> onKill = [&]()
-{
-    starImgLoader.Kill();
-    starImgConverter.Kill();
-};
-
 int main(int argc, char* argv[])
 {
     Console console(argv[0]);
 
-    starImgLoader.OnError.Subscribe(console.onError);
-    starImgLoader.OnComplete.Subscribe(console.onComplete);
+    starImgLoader.OnErrorEvent.Subscribe(bind(&Console::OnError, &console, placeholders::_1));
+    starImgLoader.OnCompleteEvent.Subscribe(bind(&Console::OnComplete, &console, placeholders::_1));
 
-    starImgConverter.OnError.Subscribe(console.onError);
-    starImgConverter.OnChangeProgress.Subscribe(console.onChangeProgress);
-    starImgConverter.OnComplete.Subscribe(console.onComplete);
+    starImgConverter.OnErrorEvent.Subscribe(bind(&Console::OnError, &console, placeholders::_1));
+    starImgConverter.OnChangeProgressEvent.Subscribe(bind(&Console::OnChangeProgress, &console, placeholders::_1));
+    starImgConverter.OnCompleteEvent.Subscribe(bind(&Console::OnComplete, &console, placeholders::_1));
+    
+    console.OnLoadEvent.Subscribe([&](tuple<string, bool> args)
+    {
+        auto& [loadPath, multiThread] = args;
+        starImgLoader.Load(starImgs, loadPath, multiThread);
+    });
 
-    console.OnLoad.Subscribe(onLoad);
-    console.OnConvert.Subscribe(onConvert);
-    console.OnPreview.Subscribe(onPreview);
-    console.OnKill.Subscribe(onKill);
+    console.OnConvertEvent.Subscribe([&](bool multiThread)
+    {
+        starImgConverter.Convert(result, starImgs, multiThread);
+        saveImage(result);
+    });
+
+    console.OnPreviewEvent.Subscribe([&](tuple<int, string> args)
+    {
+        auto& [sourceIndex, endPassName] = args;
+        Mat m = starImgConverter.SingleConvert(starImgs, sourceIndex, endPassName);
+        showImageWaitAndThrough(m);
+    });
+
+    console.OnKillEvent.Subscribe([&]()
+    {
+        starImgLoader.Kill();
+        starImgConverter.Kill();
+    });
 
     console.Main();
 

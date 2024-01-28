@@ -29,11 +29,11 @@ class StarImgConverter
     class IsKilledException : Exception { };
 
 private:
-    Event<void, string> _onError;
-    Event<void, string> _onPassInitialize;
-    Event<void, string> _onPassFinalize;
-    Event<void, tuple<int, int, float>> _onChangeProgress;
-    Event<void, string> _onComplete;
+    Event<void, string> _onErrorEvent;
+    Event<void, string> _onPassInitializeEvent;
+    Event<void, string> _onPassFinalizeEvent;
+    Event<void, tuple<int, int, float>> _onChangeProgressEvent;
+    Event<void, string> _onCompleteEvent;
 
     RemoveIndex0ImgPass _removeIndex0ImgPass = RemoveIndex0ImgPass();
     CalcRotationPass _calcRotationPass = CalcRotationPass();
@@ -45,11 +45,11 @@ private:
     bool _isRunning;
 
 public:
-    IReadOnlyEvent<void, string>& OnError = _onError;
-    IReadOnlyEvent<void, string>& OnPassInitialize = _onPassInitialize;
-    IReadOnlyEvent<void, string>& OnPassFinalize = _onPassFinalize;
-    IReadOnlyEvent<void, tuple<int, int, float>>& OnChangeProgress = _onChangeProgress;
-    IReadOnlyEvent<void, string>& OnComplete = _onComplete;
+    IReadOnlyEvent<void, string>& OnErrorEvent = _onErrorEvent;
+    IReadOnlyEvent<void, string>& OnPassInitializeEvent = _onPassInitializeEvent;
+    IReadOnlyEvent<void, string>& OnPassFinalizeEvent = _onPassFinalizeEvent;
+    IReadOnlyEvent<void, tuple<int, int, float>>& OnChangeProgressEvent = _onChangeProgressEvent;
+    IReadOnlyEvent<void, string>& OnCompleteEvent = _onCompleteEvent;
 
 private:
     void PassInitialize(PassBaseNonGeneric& passBase, optional<string> endPassName)
@@ -57,7 +57,7 @@ private:
         if (!_isRunning) throw IsKilledException();
 
         string passName = passBase.GetName();
-        _onPassInitialize(passName);
+        _onPassInitializeEvent(passName);
 
         bool isEndPassNameNull = !endPassName || endPassName.value().empty();
         if (!isEndPassNameNull && passName == endPassName) throw IsKilledException();
@@ -68,7 +68,7 @@ private:
         if (!_isRunning) throw IsKilledException();
 
         string passName = passBase.GetName();
-        _onPassFinalize(passName);
+        _onPassFinalizeEvent(passName);
     }
 
     float Progress()
@@ -79,7 +79,7 @@ private:
     void SetProgress(int step, int allStep, float value)
     {
         _progress = value;
-        _onChangeProgress({ step, allStep, value });
+        _onChangeProgressEvent({ step, allStep, value });
     }
 
     void ConvertInternal(Mat& result, SideStarImg& sideStarImg, Mat& img, optional<string> endPassName = nullopt)
@@ -183,13 +183,13 @@ public:
     {
         if (_isRunning)
         {
-            _onError("IsRunning");
+            _onErrorEvent("IsRunning");
             return;
         }
 
         if (starImgs.size() <= 0)
         {
-            _onError("StarImgsSizeIsZero");
+            _onErrorEvent("StarImgsSizeIsZero");
             return;
         }
 
@@ -207,7 +207,7 @@ public:
         }
         _isRunning = false;
 
-        _onComplete("Convert");
+        _onCompleteEvent("Convert");
     }
 
     Mat Convert(vector<StarImg>& starImgs, bool multiThread = true)
@@ -221,7 +221,7 @@ public:
     {
         if (_isRunning)
         {
-            _onError("IsRunning");
+            _onErrorEvent("IsRunning");
             return;
         }
 

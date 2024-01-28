@@ -17,12 +17,12 @@ class StarImgLoader
 {
 private:
     bool _isRunning;
-    Event<void, string> _onError;
-    Event<void, string> _onComplete;
+    Event<void, string> _onErrorEvent;
+    Event<void, string> _onCompleteEvent;
 
 public:
-    IReadOnlyEvent<void, string>& OnError = _onError;
-    IReadOnlyEvent<void, string>& OnComplete = _onComplete;
+    IReadOnlyEvent<void, string>& OnErrorEvent = _onErrorEvent;
+    IReadOnlyEvent<void, string>& OnCompleteEvent = _onCompleteEvent;
 
 private:
     void LoadInternal(StarImg& starImg, string parentFolderPath, int sourceIndex, size_t lonIndex, size_t latIndex)
@@ -102,7 +102,7 @@ public:
     {
         if (_isRunning) 
         {
-            _onError("IsRunning");
+            _onErrorEvent("IsRunning");
             return;
         }
 
@@ -113,7 +113,7 @@ public:
         }
         _isRunning = false;
 
-        _onComplete("Load");
+        _onCompleteEvent("Load");
     }
 
     vector<StarImg> Load(string parentFolderPath, bool multiThread = true)
