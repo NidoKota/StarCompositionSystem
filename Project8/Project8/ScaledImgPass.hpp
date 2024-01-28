@@ -38,11 +38,13 @@ public:
         Point2f bgCenterPix(bgSize.x / 2.0f, bgSize.y / 2.0f);
         Mat bg = Mat(bgSize.y, bgSize.x, CV_8UC3);
 
-        /*Point2i plu = Point2i(0, 0);
+        /*
+        Point2i plu = Point2i(0, 0);
         Point2i pru = Point2i(bgSize.x, 0);
         Point2i pld = Point2i(bgCenterPix.x - input.downScaleImgSizeX / 2.0f, bgSize.y);
         Point2i prd = Point2i(bgCenterPix.x + input.downScaleImgSizeX / 2.0f, bgSize.y);
-        perspective(bg, inout, plu, pru, pld, prd);*/
+        perspective(bg, inout, plu, pru, pld, prd);
+        */
 
         SplitScalerFunc scalerFunc = [input](int line) -> float
         {
