@@ -14,7 +14,7 @@ inline void writeMessageMultiThread(stringstream& ss)
 }
 
 #define TEST_OUT(x) \
-do { stringstream ss; ss << getTimeStamp() << " " << x << endl; writeMessageMultiThread(ss); } while(false)
+do { stringstream ss; ss << getTimeStamp() << " " << boolalpha << x << endl; writeMessageMultiThread(ss); } while(false)
 
 namespace UnitTest
 {

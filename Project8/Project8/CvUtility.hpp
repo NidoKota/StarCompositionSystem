@@ -36,10 +36,10 @@ inline string getTimeStamp()
 }
 
 #define OUT(x) \
-do { stringstream ss; ss << getTimeStamp() << " " << x << endl; coutMultiThread(ss); } while(false)
+do { stringstream ss; ss << getTimeStamp() << " " << boolalpha << x << endl; coutMultiThread(ss); } while (false)
 
 #define ERROR_OUT(x) \
-do { stringstream ss; ss << "error! " << getTimeStamp() << " " << x << endl; coutMultiThread(ss); } while(false)
+do { stringstream ss; ss << "error! " << getTimeStamp() << " " << boolalpha << x << endl; coutMultiThread(ss); } while (false)
 
 #define PUBLIC_GET_PRIVATE_SET(type, name) \
 public: type Get##name(){ return name; } \
