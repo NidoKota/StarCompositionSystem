@@ -16,37 +16,43 @@
 #include "CvUtility.hpp"
 #include "PassBase.hpp"
 
-using namespace std;
-using namespace cv;
-
-using RemoveIndex0ImgPassBase = PassBase<StarImg&, bool>;
-class RemoveIndex0ImgPass : public RemoveIndex0ImgPassBase
+namespace StarCompositionSystem
 {
-public:
-    string GetName() override
+    using namespace std;
+    using namespace cv;
+
+    using RemoveIndex0ImgPassInput = tuple<StarImg, size_t>;
+    using RemoveIndex0ImgPassBase = PassBase<RemoveIndex0ImgPassInput&&, bool>;
+    class RemoveIndex0ImgPass : public RemoveIndex0ImgPassBase
     {
-        return NAMEOF(RemoveIndex0ImgPass);
-    }
-
-    bool Calcurate(Mat& inout, StarImg& input) override
-    {
-        bool isRemoved;
-
-        if (input.sourceIndex() == 0)
+    public:
+        string GetName() override
         {
-            Point2i imgSize = inout.size();
-            //inout = addSplitTextThickness(inout, "not convert", 50, 1, 1, convertRightUpCenter01ToCvScape(Point2f(-0.15, 0.25), imgSize));
-
-            isRemoved = true;
-        }
-        else
-        {
-            isRemoved = false;
+            return NAMEOF(RemoveIndex0ImgPass);
         }
 
-        return isRemoved;
-    }
+        bool Calcurate(Mat& inout, RemoveIndex0ImgPassInput&& input) override
+        {
+            auto& [starImg, starImgsSize] = input;
 
-    RemoveIndex0ImgPass() : RemoveIndex0ImgPassBase() { }
-    ~RemoveIndex0ImgPass() { }
-};
+            bool isRemoved;
+
+            if (starImg.sourceIndex() == 0 || starImg.sourceIndex() == (int)starImgsSize - 1)
+            {
+                Point2i imgSize = inout.size();
+                //inout = addSplitTextThickness(inout, "not convert", 50, 1, 1, convertRightUpCenter01ToCvScape(Point2f(-0.15, 0.25), imgSize));
+
+                isRemoved = true;
+            }
+            else
+            {
+                isRemoved = false;
+            }
+
+            return isRemoved;
+        }
+
+        RemoveIndex0ImgPass() : RemoveIndex0ImgPassBase() { }
+        ~RemoveIndex0ImgPass() { }
+    };
+}

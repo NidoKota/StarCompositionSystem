@@ -5,17 +5,20 @@
 
 #include "CvUtility.hpp"
 
-using namespace std;
-using namespace cv;
-
-class StarScale
+namespace StarCompositionSystem
 {
-public:
-    float centerLat;
-    float upLat;
-    float downLat;
-    float upScale;
-    float downScale;
-    float upScaleImgSizeX;
-    float downScaleImgSizeX;
-};
+    using namespace std;
+    using namespace cv;
+
+    class StarScale
+    {
+    public:
+        float centerLat;
+        float upLat;
+        float downLat;
+        float upScale;
+        float downScale;
+        float upScaleImgSizeX;
+        float downScaleImgSizeX;
+    };
+}

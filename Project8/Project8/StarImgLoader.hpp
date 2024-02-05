@@ -10,121 +10,124 @@
 #include "StarImg.hpp"
 #include "Event.hpp"
 
-using namespace std;
-using namespace cv;
-
-class StarImgLoader
+namespace StarCompositionSystem
 {
-private:
-    bool _isRunning;
-    Event<void, string> _onErrorEvent;
-    Event<void, string> _onCompleteEvent;
+    using namespace std;
+    using namespace cv;
 
-public:
-    IReadOnlyEvent<void, string>& OnErrorEvent = _onErrorEvent;
-    IReadOnlyEvent<void, string>& OnCompleteEvent = _onCompleteEvent;
-
-private:
-    void LoadInternal(StarImg& starImg, string parentFolderPath, int sourceIndex, size_t lonIndex, size_t latIndex)
+    class StarImgLoader
     {
-        const float lat = StarData::latIndexToLat[latIndex];
-        const size_t lonImgCount = StarData::latToLonImgCount.at(lat);
-        const float lonStepMinit = StarData::latToLonStepMinit.at(lat);
-        const float lonStep = (lonStepMinit / (24 * 60)) * 360;
+    private:
+        bool _isRunning;
+        Event<void, string> _onErrorEvent;
+        Event<void, string> _onCompleteEvent;
 
-        const string path = StarData::GetSoucesPath(parentFolderPath, sourceIndex + 1);
+    public:
+        IReadOnlyEvent<void, string>& OnErrorEvent = _onErrorEvent;
+        IReadOnlyEvent<void, string>& OnCompleteEvent = _onCompleteEvent;
 
-        Mat* starMat = new Mat(getImage(path));
-
-        starImg.SetImg(starMat);
-
-        starImg.SetLon(lonIndex * lonStep);
-        starImg.SetLat(lat);
-
-        starImg.SetLonIndex(lonIndex);
-        starImg.SetLatIndex(latIndex);
-
-        starImg.SetSourceIndex(sourceIndex);
-    }
-
-    void LoadSingleThread(vector<StarImg>& result, string parentFolderPath)
-    {
-        int allImgCount = StarData::GetAllImgCount();
-
-        result = vector<StarImg>(allImgCount);
-
-        int sourceIndex = 0;
-        for (size_t latIndex = 0; latIndex < size(StarData::latIndexToLat); latIndex++)
+    private:
+        void LoadInternal(StarImg& starImg, string parentFolderPath, int sourceIndex, size_t lonIndex, size_t latIndex)
         {
             const float lat = StarData::latIndexToLat[latIndex];
             const size_t lonImgCount = StarData::latToLonImgCount.at(lat);
+            const float lonStepMinit = StarData::latToLonStepMinit.at(lat);
+            const float lonStep = (lonStepMinit / (24 * 60)) * 360;
 
-            for (size_t lonIndex = 0; lonIndex < lonImgCount; lonIndex++, sourceIndex++)
+            const string path = StarData::GetSoucesPath(parentFolderPath, sourceIndex + 1);
+
+            Mat* starMat = new Mat(getImage(path));
+
+            starImg.SetImg(starMat);
+
+            starImg.SetLon(lonIndex * lonStep);
+            starImg.SetLat(lat);
+
+            starImg.SetLonIndex(lonIndex);
+            starImg.SetLatIndex(latIndex);
+
+            starImg.SetSourceIndex(sourceIndex);
+        }
+
+        void LoadSingleThread(vector<StarImg>& result, string parentFolderPath)
+        {
+            int allImgCount = StarData::GetAllImgCount();
+
+            result = vector<StarImg>(allImgCount);
+
+            int sourceIndex = 0;
+            for (size_t latIndex = 0; latIndex < size(StarData::latIndexToLat); latIndex++)
             {
-                if (!_isRunning) break;
-                LoadInternal(result[sourceIndex], parentFolderPath, sourceIndex, lonIndex, latIndex);
+                const float lat = StarData::latIndexToLat[latIndex];
+                const size_t lonImgCount = StarData::latToLonImgCount.at(lat);
+
+                for (size_t lonIndex = 0; lonIndex < lonImgCount; lonIndex++, sourceIndex++)
+                {
+                    if (!_isRunning) break;
+                    LoadInternal(result[sourceIndex], parentFolderPath, sourceIndex, lonIndex, latIndex);
+                }
             }
         }
-    }
 
-    void LoadMultiThread(vector<StarImg>& result, string parentFolderPath)
-    {
-        int allImgCount = StarData::GetAllImgCount();
-
-        result = vector<StarImg>(allImgCount);
-        vector<thread> loadStarImgsThreads = vector<thread>(allImgCount);
-
-        int sourceIndex = 0;
-        for (size_t latIndex = 0; latIndex < size(StarData::latIndexToLat); latIndex++)
+        void LoadMultiThread(vector<StarImg>& result, string parentFolderPath)
         {
-            const float lat = StarData::latIndexToLat[latIndex];
-            const size_t lonImgCount = StarData::latToLonImgCount.at(lat);
+            int allImgCount = StarData::GetAllImgCount();
 
-            for (size_t lonIndex = 0; lonIndex < lonImgCount; lonIndex++, sourceIndex++)
+            result = vector<StarImg>(allImgCount);
+            vector<thread> loadStarImgsThreads = vector<thread>(allImgCount);
+
+            int sourceIndex = 0;
+            for (size_t latIndex = 0; latIndex < size(StarData::latIndexToLat); latIndex++)
             {
-                if (!_isRunning) break;
-                loadStarImgsThreads[sourceIndex] =
-                    thread([=, &result] 
-                        {  
-                            LoadInternal(result[sourceIndex], parentFolderPath, sourceIndex, lonIndex, latIndex);
-                        });
+                const float lat = StarData::latIndexToLat[latIndex];
+                const size_t lonImgCount = StarData::latToLonImgCount.at(lat);
+
+                for (size_t lonIndex = 0; lonIndex < lonImgCount; lonIndex++, sourceIndex++)
+                {
+                    if (!_isRunning) break;
+                    loadStarImgsThreads[sourceIndex] =
+                        thread([=, &result]
+                            {
+                                LoadInternal(result[sourceIndex], parentFolderPath, sourceIndex, lonIndex, latIndex);
+                            });
+                }
+            }
+
+            for (thread& th : loadStarImgsThreads)
+            {
+                th.join();
             }
         }
 
-        for (thread& th : loadStarImgsThreads)
+    public:
+        void Load(vector<StarImg>& result, string parentFolderPath, bool multiThread = true)
         {
-            th.join();
-        }
-    }
+            if (_isRunning)
+            {
+                _onErrorEvent("IsRunning");
+                return;
+            }
 
-public:
-    void Load(vector<StarImg>& result, string parentFolderPath, bool multiThread = true)
-    {
-        if (_isRunning) 
+            _isRunning = true;
+            {
+                if (multiThread) LoadMultiThread(result, parentFolderPath);
+                else             LoadSingleThread(result, parentFolderPath);
+            }
+            _isRunning = false;
+
+            _onCompleteEvent("Load " + to_string(result.size()) + " imgs");
+        }
+
+        vector<StarImg> Load(string parentFolderPath, bool multiThread = true)
         {
-            _onErrorEvent("IsRunning");
-            return;
+            vector<StarImg> result;
+            Load(result, parentFolderPath, multiThread);
+            return result;
         }
 
-        _isRunning = true;
+        void Kill()
         {
-            if (multiThread) LoadMultiThread(result, parentFolderPath);
-            else             LoadSingleThread(result, parentFolderPath);
+            _isRunning = false;
         }
-        _isRunning = false;
-
-        _onCompleteEvent("Load");
-    }
-
-    vector<StarImg> Load(string parentFolderPath, bool multiThread = true)
-    {
-        vector<StarImg> result;
-        Load(result, parentFolderPath, multiThread);
-        return result;
-    }
-
-    void Kill() 
-    {
-        _isRunning = false;
-    }
-};
+    };
+}

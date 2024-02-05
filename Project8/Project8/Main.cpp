@@ -20,6 +20,7 @@
 
 using namespace std;
 using namespace cv;
+using namespace StarCompositionSystem;
 
 StarImgLoader starImgLoader = StarImgLoader();
 StarImgConverter starImgConverter = StarImgConverter();
@@ -36,31 +37,31 @@ int main(int argc, char* argv[])
     starImgConverter.OnErrorEvent.Subscribe(bind(&Console::OnError, &console, placeholders::_1));
     starImgConverter.OnChangeProgressEvent.Subscribe(bind(&Console::OnChangeProgress, &console, placeholders::_1));
     starImgConverter.OnCompleteEvent.Subscribe(bind(&Console::OnComplete, &console, placeholders::_1));
-    
+
     console.OnLoadEvent.Subscribe([&](tuple<string, bool> args)
-    {
-        auto& [loadPath, multiThread] = args;
-        starImgLoader.Load(starImgs, loadPath, multiThread);
-    });
+        {
+            auto& [loadPath, multiThread] = args;
+            starImgLoader.Load(starImgs, loadPath, multiThread);
+        });
 
     console.OnConvertEvent.Subscribe([&](bool multiThread)
-    {
-        starImgConverter.Convert(result, starImgs, multiThread);
-        saveImage(result);
-    });
+        {
+            starImgConverter.Convert(result, starImgs, multiThread);
+            saveImage(result);
+        });
 
     console.OnPreviewEvent.Subscribe([&](tuple<int, string> args)
-    {
-        auto& [sourceIndex, endPassName] = args;
-        Mat m = starImgConverter.SingleConvert(starImgs, sourceIndex, endPassName);
-        showImageWaitAndThrough(m);
-    });
+        {
+            auto& [sourceIndex, endPassName] = args;
+            Mat m = starImgConverter.SingleConvert(starImgs, sourceIndex, endPassName);
+            showImageWaitAndThrough(m);
+        });
 
     console.OnKillEvent.Subscribe([&]()
-    {
-        starImgLoader.Kill();
-        starImgConverter.Kill();
-    });
+        {
+            starImgLoader.Kill();
+            starImgConverter.Kill();
+        });
 
     console.Main();
 

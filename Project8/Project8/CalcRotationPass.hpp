@@ -18,52 +18,55 @@
 #include "PassBase.hpp"
 #include "SideStarImg.hpp"
 
-using namespace std;
-using namespace cv;
-
-using CalcRotationPassBase = PassBase<SideStarImg&, void>;
-class CalcRotationPass : public CalcRotationPassBase
+namespace StarCompositionSystem
 {
-public:
-    string GetName() override
-    {
-        return NAMEOF(CalcRotationPass);
-    }
+    using namespace std;
+    using namespace cv;
 
-    void Calcurate(Mat& inout, SideStarImg& input) override
+    using CalcRotationPassBase = PassBase<SideStarImg&, void>;
+    class CalcRotationPass : public CalcRotationPassBase
     {
-        StarScale output;
-
-        if (input.left) 
+    public:
+        string GetName() override
         {
-            StarImg& left = input.left.value();
-            //OUT("input.left");
+            return NAMEOF(CalcRotationPass);
         }
 
-        if (input.right)
+        void Calcurate(Mat& inout, SideStarImg& input) override
         {
-            StarImg& right = input.right.value();
-            //OUT("input.right");
+            StarScale output;
+
+            if (input.left)
+            {
+                StarImg& left = input.left.value();
+                //OUT("input.left");
+            }
+
+            if (input.right)
+            {
+                StarImg& right = input.right.value();
+                //OUT("input.right");
+            }
+
+            /*Mat cimg = AddDebugText(input.center, false, "center");
+            Mat limg = AddDebugText(left, false, "left");
+            Mat rimg = AddDebugText(right, false, "right");
+
+            showImage(cimg);
+            showImage(limg);
+            showImage(rimg);*/
+
+            /*StarScale output;
+
+            Mat cimg = AddDebugText(input.center, false, "center");
+
+            showImageWaitAndThrough(cimg);
+
+            OUT((input.left ? "L true" : "L false"));
+            OUT((input.right ? "R true" : "R false"));*/
         }
 
-        /*Mat cimg = AddDebugText(input.center, false, "center");
-        Mat limg = AddDebugText(left, false, "left");
-        Mat rimg = AddDebugText(right, false, "right");
-
-        showImage(cimg);
-        showImage(limg);
-        showImage(rimg);*/
-
-        /*StarScale output;
-
-        Mat cimg = AddDebugText(input.center, false, "center");
-
-        showImageWaitAndThrough(cimg);
-
-        OUT((input.left ? "L true" : "L false"));
-        OUT((input.right ? "R true" : "R false"));*/
-    }
-
-    CalcRotationPass() : CalcRotationPassBase() { }
-    ~CalcRotationPass() { }
-};
+        CalcRotationPass() : CalcRotationPassBase() { }
+        ~CalcRotationPass() { }
+    };
+}

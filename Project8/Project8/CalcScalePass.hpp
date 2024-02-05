@@ -17,38 +17,41 @@
 #include "StarScale.hpp"
 #include "PassBase.hpp"
 
-using namespace std;
-using namespace cv;
-
-using CalcScalePassBase = PassBase<StarImg&, StarScale>;
-class CalcScalePass : public CalcScalePassBase
+namespace StarCompositionSystem
 {
-public:
-    string GetName() override
+    using namespace std;
+    using namespace cv;
+
+    using CalcScalePassBase = PassBase<StarImg&, StarScale>;
+    class CalcScalePass : public CalcScalePassBase
     {
-        return NAMEOF(CalcScalePass);
-    }
+    public:
+        string GetName() override
+        {
+            return NAMEOF(CalcScalePass);
+        }
 
-    StarScale Calcurate(Mat& inout, StarImg& input) override
-    {
-        StarScale output;
+        StarScale Calcurate(Mat& inout, StarImg& input) override
+        {
+            StarScale output;
 
-        Point2i imgSize = inout.size();
-        Point2f imgCenterPix(imgSize.x / 2.0f, imgSize.y / 2.0f);
+            Point2i imgSize = inout.size();
+            Point2f imgCenterPix(imgSize.x / 2.0f, imgSize.y / 2.0f);
 
-        output.centerLat = input.lat();
-        output.upLat = output.centerLat + imgCenterPix.y * StarData::degPerPix;
-        output.downLat = output.centerLat - imgCenterPix.y * StarData::degPerPix;
+            output.centerLat = input.lat();
+            output.upLat = output.centerLat + imgCenterPix.y * StarData::degPerPix;
+            output.downLat = output.centerLat - imgCenterPix.y * StarData::degPerPix;
 
-        output.upScale = 1.0f / cos((output.upLat / 360.0f) * M_PI * 2.0f);
-        output.downScale = 1.0f / cos((output.downLat / 360.0f) * M_PI * 2.0f);
+            output.upScale = 1.0f / cos((output.upLat / 360.0f) * M_PI * 2.0f);
+            output.downScale = 1.0f / cos((output.downLat / 360.0f) * M_PI * 2.0f);
 
-        output.upScaleImgSizeX = imgSize.x * output.upScale;
-        output.downScaleImgSizeX = imgSize.x * output.downScale;
+            output.upScaleImgSizeX = imgSize.x * output.upScale;
+            output.downScaleImgSizeX = imgSize.x * output.downScale;
 
-        return output;
-    }
+            return output;
+        }
 
-    CalcScalePass() : CalcScalePassBase() { }
-    ~CalcScalePass() { }
-};
+        CalcScalePass() : CalcScalePassBase() { }
+        ~CalcScalePass() { }
+    };
+}

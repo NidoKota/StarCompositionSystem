@@ -3,24 +3,182 @@
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-using namespace std;
-using namespace cv;
-
-//mutex writeMutex;
-inline void writeMessageMultiThread(stringstream& ss)
+namespace UnitTest
 {
-    //lock_guard<mutex> lock(writeMutex);
-    Logger::WriteMessage(ss.str().c_str());
-}
+    using namespace std;
+    using namespace cv;
+    using namespace StarCompositionSystem;
+
+    //mutex writeMutex;
+    inline void writeMessageMultiThread(stringstream& ss)
+    {
+        //lock_guard<mutex> lock(writeMutex);
+        Logger::WriteMessage(ss.str().c_str());
+    }
 
 #define TEST_OUT(x) \
 do { stringstream ss; ss << getTimeStamp() << " " << boolalpha << x << endl; writeMessageMultiThread(ss); } while(false)
 
-namespace UnitTest
-{
 	TEST_CLASS(UnitTest)
 	{
 	public:
+        TEST_METHOD(ShowImageWaitAndThrough)
+        {
+            Mat src = getImage("C:/img/Lenna256x256.bmp");
+
+            thread th;
+            showImageWaitAndThrough(src, th);
+            th.join();
+
+            showImageWaitAndThrough(src);
+            this_thread::sleep_for(chrono::seconds(2));
+        }
+
+        TEST_METHOD(ThreadTestA)
+        {
+            std::mutex mtx;
+            std::condition_variable cv;
+            bool isMainReady = false;
+            bool isSubReady = false;
+
+            std::thread th([&]()
+                {
+                    std::this_thread::sleep_for(std::chrono::seconds(2));
+                    {
+                        std::unique_lock<std::mutex> lck(mtx);
+                        TEST_OUT("[Sub] start");
+                        isSubReady = true;
+                        if (isMainReady)
+                        {
+                            TEST_OUT("[Sub] wakes main up");
+                            cv.notify_one();
+                        }
+                        else
+                        {
+                            TEST_OUT("[Sub] sleeps until main is ready");
+                            while (!isMainReady)
+                                cv.wait(lck);
+                        }
+                    }
+                    TEST_OUT("[Sub] started");
+                });
+
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+            {
+                std::unique_lock<std::mutex> lck(mtx);
+                TEST_OUT("[Main] start");
+                isMainReady = true;
+                if (isSubReady)
+                {
+                    TEST_OUT("[Main] wakes sub up");
+                    cv.notify_one();
+                }
+                else
+                {
+                    TEST_OUT("[Main] sleeps until sub is ready");
+                    while (!isSubReady)
+                        cv.wait(lck);
+                }
+            }
+            TEST_OUT("[Main] started");
+
+            th.join();
+
+        }
+
+        TEST_METHOD(ThreadTestB)
+        {
+            TEST_OUT("ThreadTestB");
+
+            bool notify = false;
+            mutex mtx;
+            condition_variable cv;
+
+            thread A([&]()
+                {
+                    TEST_OUT("A");
+
+                    TEST_OUT("A wait");
+                    this_thread::sleep_for(chrono::seconds(2));
+                    TEST_OUT("A wait end");
+
+                    TEST_OUT("A lock");
+                    unique_lock<mutex> lk(mtx);
+
+                    TEST_OUT("A wait");
+                    this_thread::sleep_for(chrono::seconds(2));
+                    TEST_OUT("A wait end");
+
+                    TEST_OUT("A notify_all");
+                    notify = true;
+                    cv.notify_all();
+
+                    TEST_OUT("A wait");
+                    this_thread::sleep_for(chrono::seconds(2));
+                    TEST_OUT("A wait end");
+
+                    TEST_OUT("A unlock");
+                    lk.unlock();
+
+                    TEST_OUT("A wait");
+                    this_thread::sleep_for(chrono::seconds(2));
+                    TEST_OUT("A wait end");
+
+                    TEST_OUT("A End");
+                });
+
+            thread B([&]()
+                {
+                    TEST_OUT("B");
+                    TEST_OUT("B lock");
+                    unique_lock<mutex> lk(mtx);
+
+                    TEST_OUT("B wait");
+                    this_thread::sleep_for(chrono::seconds(4));
+                    TEST_OUT("B wait end");
+
+                    TEST_OUT("B cv.wait");
+                    cv.wait(lk, [&]
+                        {
+                            TEST_OUT("B cv check " << notify);
+                            return notify;
+                        });
+
+                    TEST_OUT("B wait");
+                    this_thread::sleep_for(chrono::seconds(2));
+                    TEST_OUT("B wait end");
+
+                    TEST_OUT("B End");
+                });
+
+            B.join();
+            A.join();
+        }
+
+        TEST_METHOD(ThreadTestC)
+        {
+            thread A([&]()
+                {
+                    this_thread::sleep_for(chrono::seconds(2));
+                    TEST_OUT("A End");
+                });
+
+            thread B([&]()
+                {
+                    TEST_OUT("B A" << A.joinable());
+
+                    A.join();
+
+                    this_thread::sleep_for(chrono::seconds(4));
+                    TEST_OUT("B End");
+                });
+
+            TEST_OUT("B" << B.joinable());
+            TEST_OUT("A" << A.joinable());
+
+            B.join();
+        }
+
 		TEST_METHOD(Perspective)
 		{
             Mat src = getImage("C:/img/Lenna256x256.bmp");

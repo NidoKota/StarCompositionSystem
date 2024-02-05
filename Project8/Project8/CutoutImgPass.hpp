@@ -16,42 +16,45 @@
 #include "CvUtility.hpp"
 #include "PassBase.hpp"
 
-using namespace std;
-using namespace cv;
-
-using CutoutImgPassInput = tuple<StarImg&, StarScale&>;
-using CutoutImgPassBase = PassBase<CutoutImgPassInput, void>;
-class CutoutImgPass : public CutoutImgPassBase
+namespace StarCompositionSystem
 {
-public:
-    string GetName() override
+    using namespace std;
+    using namespace cv;
+
+    using CutoutImgPassInput = tuple<StarImg, StarScale>;
+    using CutoutImgPassBase = PassBase<CutoutImgPassInput&&, void>;
+    class CutoutImgPass : public CutoutImgPassBase
     {
-        return NAMEOF(CutoutImgPass);
-    }
+    public:
+        string GetName() override
+        {
+            return NAMEOF(CutoutImgPass);
+        }
 
-    void Calcurate(Mat& inout, CutoutImgPassInput input) override
-    {
-        auto& [starImg, starScale] = input;
+        void Calcurate(Mat& inout, CutoutImgPassInput&& input) override
+        {
+            auto& [starImg, starScale] = input;
 
-        Point2i imgSize = inout.size();
+            Point2i imgSize = inout.size();
 
-        float centerLat = starImg.lat();
-        bool isUpLarger = starScale.upScaleImgSizeX > starScale.downScaleImgSizeX;
+            float centerLat = starImg.lat();
+            bool isUpLarger = starScale.upScaleImgSizeX > starScale.downScaleImgSizeX;
 
-        Point2i bgSize(isUpLarger ? starScale.upScaleImgSizeX : starScale.downScaleImgSizeX, imgSize.y);
-        Point2f bgCenterPix(bgSize.x / 2.0f, bgSize.y / 2.0f);
+            Point2i bgSize(isUpLarger ? starScale.upScaleImgSizeX : starScale.downScaleImgSizeX, imgSize.y);
+            Point2f bgCenterPix(bgSize.x / 2.0f, bgSize.y / 2.0f);
 
-        int pixXRange = ceil(360.0f / StarData::degPerPix / StarData::latToLonImgCount.at(centerLat));
-        int pixYRange = ceil(90.0f / StarData::degPerPix / (size(StarData::latIndexToLat) - 1));
-        if (pixXRange % 2 != 0) pixXRange++;
-        if (pixYRange % 2 != 0) pixYRange++;
-        Point2i convertedImgSize = Point2i(pixXRange, pixYRange);
+            int pixXRange = ceil(360.0f / StarData::degPerPix / StarData::latToLonImgCount.at(centerLat));
+            int pixYRange = ceil(180.0f / StarData::degPerPix / size(StarData::latIndexToLat));
+            if (pixXRange % 2 != 0) pixXRange++;
+            if (pixYRange % 2 != 0) pixYRange++;
+            Point2i convertedImgSize = Point2i(pixXRange, pixYRange);
 
-        Point2f clu = bgCenterPix - (Point2f)convertedImgSize / 2.0f;
-        Point2f crd = bgCenterPix + (Point2f)convertedImgSize / 2.0f;
-        inout = cutout(inout, clu, crd);
-    }
+            Point2f clu = bgCenterPix - (Point2f)convertedImgSize / 2.0f;
+            Point2f crd = bgCenterPix + (Point2f)convertedImgSize / 2.0f;
+            inout = cutout(inout, clu, crd);
+        }
 
-    CutoutImgPass() : CutoutImgPassBase() { }
-    ~CutoutImgPass() { }
-};
+        CutoutImgPass() : CutoutImgPassBase() { }
+        ~CutoutImgPass() { }
+    };
+}
